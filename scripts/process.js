@@ -36,7 +36,7 @@ async function processFile(inputPath) {
           weekDay = format(parse(timeEntry.startDate), 'ddd')
           dayProjectSum += timeEntry.duration || 0
           daySum += timeEntry.duration || 0
-          const note = timeEntry.notes ? timeEntry.notes.split('\n').join(' ') : null
+          const note = timeEntry.notes ? timeEntry.notes.split('\n').join(' / ') : null
           if (timeEntry.notes && note.indexOf('timing.eventID') === -1) {
             notes.push(note)
           }

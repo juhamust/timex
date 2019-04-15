@@ -4,6 +4,7 @@
   "description": "",
   "main": "process.js",
   "scripts": {
+    "start": "npm run build",
     "build": "npm run export && npm run process",
     "export": "/usr/bin/env osascript -l JavaScript scripts/export.jxa /Users/juha/Projects/timer/output.json",
     "process": "node scripts/process.js ./output.json"
