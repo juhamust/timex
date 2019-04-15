@@ -1,0 +1,5 @@
+*.scpt
+temp*
+tmp*
+output.json
+/node_modules/

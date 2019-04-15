@@ -1,0 +1,19 @@
+{
+  "name": "timer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "process.js",
+  "scripts": {
+    "build": "npm run export && npm run process",
+    "export": "/usr/bin/env osascript -l JavaScript scripts/export.jxa /Users/juha/Projects/timer/output.json",
+    "process": "node scripts/process.js ./output.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "date-fns": "^1.30.1",
+    "jsonfile": "^5.0.0",
+    "lodash.groupby": "^4.6.0"
+  }
+}

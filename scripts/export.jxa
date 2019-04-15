@@ -1,0 +1,51 @@
+var endDate = new Date();
+var startDate = new Date(endDate);
+startDate.setDate(startDate.getDate() - 30 /* days */);
+
+function getHelper() {
+  const helper = Application('TimingHelper');
+  if (!helper.scriptingSupportAvailable()) {
+    throw 'Export functionality required';
+  }
+
+  return helper
+}
+
+function exportReport(outputPath) {
+  const helper = getHelper()
+  const app = Application.currentApplication();
+  app.includeStandardAdditions = true;
+
+  const reportSettings = helper.ReportSettings().make();
+  const exportSettings = helper.ExportSettings().make();
+
+  reportSettings.firstGroupingMode = 'raw';
+  reportSettings.tasksIncluded = true;
+  reportSettings.appUsageIncluded = false;
+
+  exportSettings.fileFormat = 'JSON';
+  exportSettings.durationFormat = 'seconds';
+  exportSettings.shortEntriesIncluded = true;
+
+  helper.saveReport({
+    withReportSettings: reportSettings,
+    exportSettings: exportSettings,
+    between: startDate,
+    and: endDate,
+    to: outputPath,
+  });
+
+  helper.delete(reportSettings);
+  helper.delete(exportSettings);
+}
+
+
+function run(argv) {
+  if (argv.length !== 1) {
+    app.displayAlert('Please provide the output file')
+    return $.exit(-2)
+  }
+
+  exportReport(argv[0])
+}
+
