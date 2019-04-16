@@ -54,7 +54,7 @@ async function processFile(inputPath) {
             notes.push(note)
           }
         })
-        const notePrint = notes.length > 0 ? `>>> ${notes.join(' ')}` : ''
+        const notePrint = notes.length > 0 ? `>>> ${notes.join(' / ')}` : ''
         return `  - ${projectKey}: ${formatNumber(dayProjectSum)} ${notePrint}`
       })
 
