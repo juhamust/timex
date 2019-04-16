@@ -1,4 +1,3 @@
-const fs = require('fs')
 const path = require('path')
 const jsonfile = require('jsonfile')
 const { parse, format } = require('date-fns')

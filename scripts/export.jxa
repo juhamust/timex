@@ -1,6 +1,3 @@
-var endDate = new Date();
-var startDate = new Date(endDate);
-startDate.setDate(startDate.getDate() - 30 /* days */);
 
 function getHelper() {
   const helper = Application('TimingHelper');
@@ -11,7 +8,8 @@ function getHelper() {
   return helper
 }
 
-function exportReport(outputPath) {
+function exportReport(startDate, endDate, outputPath) {
+  console.log(`Exporting hours between ${startDate} - ${endDate}`)
   const helper = getHelper()
   const app = Application.currentApplication();
   app.includeStandardAdditions = true;
@@ -41,11 +39,15 @@ function exportReport(outputPath) {
 
 
 function run(argv) {
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - 30 /* days */);
+
   if (argv.length !== 1) {
     app.displayAlert('Please provide the output file')
     return $.exit(-2)
   }
 
-  exportReport(argv[0])
+  exportReport(startDate, endDate, argv[0])
 }
 
