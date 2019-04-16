@@ -8,6 +8,20 @@ function formatNumber(rawValue) {
   return `${hours} hrs`
 }
 
+function filterEntry(entry) {
+  if (entry.project.toLocaleLowerCase().indexOf('personal') !== -1) {
+    return false
+  }
+  return true
+}
+
+function filterProject(projectName) {
+  if (projectName.toLocaleLowerCase().indexOf('personal') !== -1) {
+    return false
+  }
+  return true
+}
+
 async function processFile(inputPath) {
   let output = []
 
@@ -26,12 +40,12 @@ async function processFile(inputPath) {
       let daySum = 0
 
       // Iterate time entries per day/project
-      const projectOutput = Object.keys(groupedByProject).map(projectKey => {
+      const projectOutput = Object.keys(groupedByProject).filter(filterProject).map(projectKey => {
         let dayProjectSum = 0
         let notes = []
 
         // Iterate all time entries withing project
-        groupedByProject[projectKey].forEach(timeEntry => {
+        groupedByProject[projectKey].filter(filterEntry).forEach(timeEntry => {
           weekDay = format(parse(timeEntry.startDate), 'ddd')
           dayProjectSum += timeEntry.duration || 0
           daySum += timeEntry.duration || 0
