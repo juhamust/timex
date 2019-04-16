@@ -6,8 +6,8 @@
   "scripts": {
     "start": "npm run build",
     "build": "npm run export && npm run process",
-    "export": "CURDIR=`pwd` && /usr/bin/env osascript -l JavaScript scripts/export.jxa $CURDIR/output.json",
-    "process": "node scripts/process.js ./output.json"
+    "export": "CURDIR=`pwd` && mkdir -p $CURDIR/tmp && /usr/bin/env osascript -l JavaScript scripts/export.jxa $CURDIR/tmp/output.json",
+    "process": "node scripts/process.js ./tmp/output.json"
   },
   "keywords": [],
   "author": "",
