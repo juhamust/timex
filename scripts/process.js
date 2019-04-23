@@ -2,6 +2,7 @@ const path = require('path')
 const jsonfile = require('jsonfile')
 const { parse, format } = require('date-fns')
 const groupby = require('lodash.groupby')
+const { red, blue, yellow, green, bold, gray } = require('colorette')
 
 function formatDecimalHours(rawValue) {
   const hours = parseFloat(rawValue/3600).toFixed(2)
@@ -56,20 +57,22 @@ async function processFile(inputPath) {
           weekDay = format(parse(timeEntry.startDate), 'ddd')
           dayProjectSum += timeEntry.duration || 0
           daySum += timeEntry.duration || 0
+          // Add notes if set
           const note = timeEntry.notes ? timeEntry.notes.split('\n').join(' / ') : null
           if (timeEntry.notes && note.indexOf('timing.eventID') === -1) {
             notes.push(note)
           }
         })
-        const notePrint = notes.length > 0 ? `--- ${notes.join(' / ')}` : ''
+        const notePrint = notes.length > 0 ? `${gray('---')} ${notes.join(gray(' / '))}` : ''
         const decimalHours = formatDecimalHours(dayProjectSum)
         const hours = formatHours(dayProjectSum)
-        return `  - ${projectKey}: ${decimalHours} / ${hours} ${notePrint}`
+        return `  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${notePrint}`
       })
 
       const decimalHours = formatDecimalHours(daySum)
       const hours = formatHours(daySum)
-      dayOutput.push(`[ ${weekDay.toLocaleUpperCase()} ${dayKey} (${decimalHours} / ${hours}) ]`)
+      // Add day separator
+      dayOutput.push(`[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} (${green(decimalHours)} / ${blue(hours)}) ]`)
       dayOutput = dayOutput.concat(projectOutput.sort())
       dayOutput.push('')
 
