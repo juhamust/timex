@@ -11,16 +11,43 @@ const { parse, format } = require('date-fns')
 const groupby = require('lodash.groupby')
 const { red, blue, yellow, green, bold, gray } = require('colorette')
 
+function parseDuration(rawValue) {
+  const decimalValue = parseFloat(rawValue / 3600)
+  const hours = parseInt(decimalValue)
+  const minutes = ((decimalValue % 1) * 60).toFixed(0)
+
+  return {
+    hours,
+    minutes
+  }
+}
+
 function formatDecimalHours(rawValue) {
   const hours = parseFloat(rawValue/3600).toFixed(2)
   return `${hours} hrs`
 }
 
 function formatHours(rawValue) {
-  const decimalValue = parseFloat(rawValue / 3600)
-  const hours = parseInt(decimalValue)
-  const minutes = ((decimalValue % 1) * 60).toFixed(0)
-  return `${hours}:${minutes < 10 ? `0${minutes}`: minutes }`
+  const parsed = parseDuration(rawValue)
+  return `${parsed.hours}:${parsed.minutes < 10 ? `0${parsed.minutes}`: parsed.minutes }`
+}
+
+function formatRoundHours(rawValue) {
+  const parsed = parseDuration(rawValue)
+  if (parsed.minutes < 15) {
+    parsed.minutes = 0
+  }
+  else if (parsed.minutes >= 15 && parsed.minutes < 30) {
+    parsed.minutes = 30
+  }
+  else if (parsed.minutes >= 30 && parsed.minutes < 45) {
+    parsed.minutes = 30
+  }
+  else if (parsed.minutes >= 45) {
+    parsed.hours += 1
+    parsed.minutes = 0
+  }
+  return `${parsed.hours}:${parsed.minutes < 10 ? `0${parsed.minutes}` : parsed.minutes}`
 }
 
 function filterEntry(entry) {
@@ -73,13 +100,15 @@ async function processFile(inputPath) {
         const notePrint = notes.length > 0 ? `${gray('---')} ${notes.join(gray(' / '))}` : ''
         const decimalHours = formatDecimalHours(dayProjectSum)
         const hours = formatHours(dayProjectSum)
-        return `  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${notePrint}`
+        const roundHours = formatRoundHours(dayProjectSum)
+        return `  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')} ${notePrint}`
       })
 
       const decimalHours = formatDecimalHours(daySum)
       const hours = formatHours(daySum)
+      const roundHours = formatRoundHours(daySum)
       // Add day separator
-      dayOutput.push(`[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} (${green(decimalHours)} / ${blue(hours)}) ]`)
+      dayOutput.push(`[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} (${green(decimalHours)} / ${blue(hours)} / ${red(roundHours)}) ]`)
       dayOutput = dayOutput.concat(projectOutput.sort())
       dayOutput.push('')
 
