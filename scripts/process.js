@@ -47,7 +47,7 @@ function formatRoundHours(rawValue) {
     parsed.hours += 1
     parsed.minutes = 0
   }
-  return `${parsed.hours}:${parsed.minutes < 10 ? `0${parsed.minutes}` : parsed.minutes}`
+  return `${parsed.hours},${parsed.minutes * 100 / 60}`
 }
 
 function filterEntry(entry) {
