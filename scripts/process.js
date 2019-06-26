@@ -78,30 +78,42 @@ async function processFile(inputPath) {
     const dayOutput = Object.keys(groupedByDate).map(dayKey => {
       const groupedByProject = groupby(groupedByDate[dayKey], 'project')
       let dayOutput = []
-      let weekDay = 'XYZ'
+      let weekDay = format(parse(dayKey), 'ddd')
       let daySum = 0
 
       // Iterate time entries per day/project
       const projectOutput = Object.keys(groupedByProject).filter(filterProject).map(projectKey => {
         let dayProjectSum = 0
         let notes = []
+        let dayProjects = []
 
         // Iterate all time entries withing project
-        groupedByProject[projectKey].filter(filterEntry).forEach(timeEntry => {
-          weekDay = format(parse(timeEntry.startDate), 'ddd')
-          dayProjectSum += timeEntry.duration || 0
-          daySum += timeEntry.duration || 0
-          // Add notes if set
-          const note = timeEntry.notes ? timeEntry.notes.split('\n').join(' / ') : null
-          if (timeEntry.notes && note.indexOf('timing.eventID') === -1) {
-            notes.push(note)
-          }
+        const groupedByActivity = groupby(groupedByProject[projectKey].filter(filterEntry), 'taskActivityTitle')
+        // Iterate all tasks within day
+        Object.keys(groupedByActivity).forEach(activityKey => {
+          const durationSum = groupedByActivity[activityKey].reduce((prevValue, timeEntry) => prevValue + timeEntry.duration || 0, 0)
+          dayProjectSum += durationSum
+          dayProjects.push({
+            activityKey,
+            duration: durationSum,
+          })
         })
-        const notePrint = notes.length > 0 ? `${gray('---')} ${notes.join(gray(' / '))}` : ''
+
         const decimalHours = formatDecimalHours(dayProjectSum)
         const hours = formatHours(dayProjectSum)
         const roundHours = formatRoundHours(dayProjectSum)
-        return `  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')} ${notePrint}`
+        const notePrint = ''
+
+        const outputLines = []
+        outputLines.push(`  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')} ${notePrint}`)
+        dayProjects.forEach(dayProjectEntry => {
+          const decimalHours = formatDecimalHours(dayProjectEntry.duration)
+          const hours = formatHours(dayProjectEntry.duration)
+          const roundHours = formatRoundHours(dayProjectEntry.duration)
+          outputLines.push(`    ${gray('>>')} ${dayProjectEntry.activityKey}: : ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')}`)
+        })
+
+        return outputLines.join('\n')
       })
 
       const decimalHours = formatDecimalHours(daySum)
