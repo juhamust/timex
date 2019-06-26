@@ -93,6 +93,7 @@ async function processFile(inputPath) {
         Object.keys(groupedByActivity).forEach(activityKey => {
           const durationSum = groupedByActivity[activityKey].reduce((prevValue, timeEntry) => prevValue + timeEntry.duration || 0, 0)
           dayProjectSum += durationSum
+          daySum += durationSum
           dayProjects.push({
             activityKey,
             duration: durationSum,
