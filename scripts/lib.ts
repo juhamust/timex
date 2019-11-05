@@ -5,209 +5,256 @@
  *
  * node scripts/process.js ./tmp/output.json
  */
-import * as jsonfile from 'jsonfile'
-import { parse, format } from 'date-fns'
-import * as groupby from 'lodash.groupby'
-import { red, blue, yellow, green, bold, gray } from 'colorette'
-import { ParsedDuration, Export, ExportEntry, Duration, Task, Summary, SummaryEntry, ProjectEntries, ProjectEntry, Tasks } from './interfaces';
+import * as jsonfile from "jsonfile";
+import { parse, format } from "date-fns";
+import * as groupby from "lodash.groupby";
+import {
+  red,
+  blue,
+  yellow,
+  green,
+  bold,
+  gray,
+  greenBright,
+  white
+} from "colorette";
+import {
+  ParsedDuration,
+  Export,
+  ExportEntry,
+  Duration,
+  Task,
+  Summary,
+  SummaryEntry,
+  ProjectEntries,
+  ProjectEntry,
+  Tasks,
+  FormatOptions
+} from "./interfaces";
 
 export function parseDuration(rawValue): ParsedDuration {
-  const decimalValue = parseFloat((rawValue / 3600).toString())
-  const hours = parseInt(decimalValue.toString(), 10)
-  const minutes = parseInt(((decimalValue % 1) * 60).toFixed(0), 10)
+  const decimalValue = parseFloat((rawValue / 3600).toString());
+  const hours = parseInt(decimalValue.toString(), 10);
+  const minutes = parseInt(((decimalValue % 1) * 60).toFixed(0), 10);
 
   return {
     hours,
-    minutes,
-  }
+    minutes
+  };
 }
 
 /**
  * Generates printable version from summary info
  * @param summary
  */
-export function formatSummary(summary: Summary): string {
-  const output: string[] = []
+export function formatSummary(
+  summary: Summary,
+  opts: FormatOptions = { oneLiner: true }
+): string {
+  const output: string[] = [];
   //return JSON.stringify(summary)
   summary.forEach(summaryEntry => {
-    const weekDay: string = format(summaryEntry.date, 'ddd')
-    const dayKey: string = format(summaryEntry.date, 'YYYY-MM-DD')
-    const decimalHours = formatDecimalHours(summaryEntry.roundedDuration)
-    output.push(`[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} / ${green(decimalHours)} ]`)
+    const weekDay: string = format(summaryEntry.date, "ddd");
+    const dayKey: string = format(summaryEntry.date, "YYYY-MM-DD");
+    const decimalHours = formatDecimalHours(summaryEntry.roundedDuration);
+    output.push(
+      `[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} / ${green(
+        decimalHours
+      )} ]`
+    );
 
     // Iterate all projects within day
     summaryEntry.projects.forEach(projectEntry => {
-      const roundedDecimalHours = formatDecimalHours(projectEntry.roundedDuration)
-      output.push(`  - ${yellow(projectEntry.title)}: ${red(roundedDecimalHours)}`)
+      const roundedDecimalHours = formatDecimalHours(
+        projectEntry.roundedDuration
+      );
 
-      // Iterate all tasks within project/day
-      projectEntry.tasks.forEach(task => {
-        const actualHours = formatHours(task.actualDuration)
-        const roundedHours = formatDecimalHours(task.roundedDuration)
-        output.push(`    ${gray('>>')} ${blue(task.title)}: ${red(roundedHours)} ${gray(`(${actualHours})`)}`)
-      })
-    })
+      // Print each task on same line and simple format
+      if (opts.oneLiner) {
+        const tasks = projectEntry.tasks.map(task => {
+          const roundedHours = formatDecimalHours(task.roundedDuration);
+          return `${white(task.title)}: ${green(roundedHours)}`;
+        });
+        output.push(
+          `  - ${yellow(projectEntry.title)}: ${red(
+            roundedDecimalHours
+          )} = ${tasks.join(" | ")}`
+        );
+      }
+      // Print each task on own line
+      else {
+        output.push(
+          `  - ${yellow(projectEntry.title)}: ${red(roundedDecimalHours)}`
+        );
 
-    output.push('')
-  })
+        // Iterate all tasks within project/day
+        projectEntry.tasks.forEach(task => {
+          const actualHours = formatHours(task.actualDuration);
+          const roundedHours = formatDecimalHours(task.roundedDuration);
+          output.push(
+            `    ${gray(">>")} ${blue(task.title)}: ${red(roundedHours)} ${gray(
+              `(${actualHours})`
+            )}`
+          );
+        });
+      }
+    });
 
-  return output.join('\n')
+    output.push("");
+  });
+
+  return output.join("\n");
 }
 
 export function formatDecimalHours(rawValue) {
-  const hours = parseFloat((rawValue/3600).toString()).toFixed(2)
-  return `${hours} hrs`
+  const hours = parseFloat((rawValue / 3600).toString()).toFixed(2);
+  return `${hours} hrs`;
 }
 
 export function formatHours(rawValue) {
-  const parsed = parseDuration(rawValue)
-  return `${parsed.hours}:${parsed.minutes < 10 ? `0${parsed.minutes}`: parsed.minutes }`
+  const parsed = parseDuration(rawValue);
+  return `${parsed.hours}:${
+    parsed.minutes < 10 ? `0${parsed.minutes}` : parsed.minutes
+  }`;
 }
 
 export function formatRoundHours(rawValue) {
-  const parsed = parseDuration(rawValue)
+  const parsed = parseDuration(rawValue);
   if (parsed.minutes < 15) {
-    parsed.minutes = 0
+    parsed.minutes = 0;
+  } else if (parsed.minutes >= 15 && parsed.minutes < 30) {
+    parsed.minutes = 30;
+  } else if (parsed.minutes >= 30 && parsed.minutes < 45) {
+    parsed.minutes = 30;
+  } else if (parsed.minutes >= 45) {
+    parsed.hours += 1;
+    parsed.minutes = 0;
   }
-  else if (parsed.minutes >= 15 && parsed.minutes < 30) {
-    parsed.minutes = 30
-  }
-  else if (parsed.minutes >= 30 && parsed.minutes < 45) {
-    parsed.minutes = 30
-  }
-  else if (parsed.minutes >= 45) {
-    parsed.hours += 1
-    parsed.minutes = 0
-  }
-  return `${parsed.hours},${parsed.minutes * 100 / 60}`
+  return `${parsed.hours},${(parsed.minutes * 100) / 60}`;
 }
 
 export function filterEntry(entry): boolean {
-  if (entry.project.toLocaleLowerCase().indexOf('personal') !== -1) {
-    return false
+  if (entry.project.toLocaleLowerCase().indexOf("personal") !== -1) {
+    return false;
   }
-  return true
+  return true;
 }
 
 export function filterProject(projectName: string): boolean {
-  if (projectName.toLocaleLowerCase().indexOf('personal') !== -1) {
-    return false
+  if (projectName.toLocaleLowerCase().indexOf("personal") !== -1) {
+    return false;
   }
-  return true
+  return true;
 }
 
 export function roundDuration(duration: number): ParsedDuration {
-  const parsedDuration = parseDuration(duration)
-  let roundedHours: number = parsedDuration.hours
-  let roundedMinutes: number = 0
+  const parsedDuration = parseDuration(duration);
+  let roundedHours: number = parsedDuration.hours;
+  let roundedMinutes: number = 0;
 
   if (parsedDuration.minutes >= 0 && parsedDuration.minutes < 15) {
-    roundedMinutes = 0
+    roundedMinutes = 0;
   }
   if (parsedDuration.minutes >= 15 && parsedDuration.minutes < 45) {
-    roundedMinutes = 30
+    roundedMinutes = 30;
   }
   if (parsedDuration.minutes > 45) {
-    roundedHours += 1
-    roundedMinutes = 0
+    roundedHours += 1;
+    roundedMinutes = 0;
   }
 
   return {
     hours: roundedHours,
-    minutes: roundedMinutes,
-  }
+    minutes: roundedMinutes
+  };
 }
 
 export async function processFile(inputPath): Promise<Summary> {
-
-  const data: Export = await jsonfile.readFile(inputPath)
+  const data: Export = await jsonfile.readFile(inputPath);
   const grouper = (entry: ExportEntry) => {
-    return format(entry.startDate, 'YYYY-MM-DD')
-  }
-  const groupedByDate = groupby(data, grouper)
+    return format(entry.startDate, "YYYY-MM-DD");
+  };
+  const groupedByDate = groupby(data, grouper);
 
   // Iterate all days
   const summary: Summary = Object.keys(groupedByDate).map(dayKey => {
-    const groupedByProject = groupby(groupedByDate[dayKey], 'project')
-    let dayOutput = []
-    const date = parse(dayKey)
-    let weekDay = format(parse(dayKey), 'ddd')
-    let daySum = 0
+    const groupedByProject = groupby(groupedByDate[dayKey], "project");
+    const date = parse(dayKey);
 
     // Iterate time entries per day/project
-    const projectEntries = Object.keys(groupedByProject).filter(filterProject).map(projectKey => {
-      let dayProjectSum = 0
-      let dayProjects = []
+    const projectEntries = Object.keys(groupedByProject)
+      .filter(filterProject)
+      .map(projectKey => {
+        let dayProjects = [];
 
-      // Iterate all time entries withing project
-      const groupedByActivity = groupby(groupedByProject[projectKey].filter(filterEntry), 'taskActivityTitle')
-      // Iterate all tasks within day
-      Object.keys(groupedByActivity).forEach(activityKey => {
-        const durationSum = groupedByActivity[activityKey].reduce((prevValue, timeEntry) => prevValue + timeEntry.duration || 0, 0)
-        dayProjectSum += durationSum
-        daySum += durationSum
-        dayProjects.push({
-          activityKey,
-          duration: durationSum,
-        })
-      })
+        // Iterate all time entries withing project
+        const groupedByActivity = groupby(
+          groupedByProject[projectKey].filter(filterEntry),
+          "taskActivityTitle"
+        );
+        // Iterate all tasks within day
+        Object.keys(groupedByActivity).forEach(activityKey => {
+          const durationSum = groupedByActivity[activityKey].reduce(
+            (prevValue, timeEntry) => prevValue + timeEntry.duration || 0,
+            0
+          );
+          dayProjects.push({
+            activityKey,
+            duration: durationSum
+          });
+        });
 
-      //const decimalHours = formatDecimalHours(dayProjectSum)
-      //const hours = formatHours(dayProjectSum)
-      //const roundHours = formatRoundHours(dayProjectSum)
-      //const notePrint = ''
+        const tasks: Tasks = dayProjects.map(dayProjectEntry => {
+          const roundedDuration = roundDuration(dayProjectEntry.duration);
+          //const decimalHours = formatDecimalHours(dayProjectEntry.duration)
+          //const hours = formatHours(dayProjectEntry.duration)
+          //const roundedHours = formatRoundHours(dayProjectEntry.duration)
+          //outputLines.push(`    ${gray('>>')} ${dayProjectEntry.activityKey}: : ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')}`)
 
-      //const outputLines = []
-      //outputLines.push(`  - ${yellow(projectKey)}: ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')} ${notePrint}`)
+          return {
+            title: dayProjectEntry.activityKey,
+            actualDuration: dayProjectEntry.duration,
+            roundedDuration:
+              roundedDuration.hours * 3600 + roundedDuration.minutes * 60
+          } as Task;
+        });
 
-      const tasks: Tasks = dayProjects.map(dayProjectEntry => {
-        const roundedDuration = roundDuration(dayProjectEntry.duration)
-        //const decimalHours = formatDecimalHours(dayProjectEntry.duration)
-        //const hours = formatHours(dayProjectEntry.duration)
-        //const roundedHours = formatRoundHours(dayProjectEntry.duration)
-        //outputLines.push(`    ${gray('>>')} ${dayProjectEntry.activityKey}: : ${green(decimalHours)} ${gray('/')} ${blue(hours)} ${gray('/')} ${red(roundHours + ' hrs')}`)
+        // Calculate sums for project and day, using rounded values
+        const actualDuration: Duration = tasks.reduce(
+          (totalDuration: number, task: Task) =>
+            totalDuration + task.actualDuration,
+          0
+        );
+        const roundedDuration: Duration = tasks.reduce(
+          (totalDuration: number, task: Task) =>
+            totalDuration + task.roundedDuration,
+          0
+        );
 
         return {
-          title: dayProjectEntry.activityKey,
-          actualDuration: dayProjectEntry.duration,
-          roundedDuration: (roundedDuration.hours * 3600) + roundedDuration.minutes * 60,
-        } as Task
-      })
+          date,
+          title: projectKey,
+          actualDuration,
+          roundedDuration,
+          tasks: tasks
+        } as ProjectEntry;
+      }) as ProjectEntries;
 
-      // Calculate sums for project and day, using rounded values
-      const actualDuration: Duration = tasks.reduce((totalDuration: number, task: Task) => totalDuration + task.actualDuration, 0)
-      const roundedDuration: Duration = tasks.reduce((totalDuration: number, task: Task) => totalDuration + task.roundedDuration, 0)
-
-      //return outputLines.join('\n')
-      return {
-        date,
-        title: projectKey,
-        actualDuration,
-        roundedDuration,
-        tasks: tasks,
-      } as ProjectEntry
-    }) as ProjectEntries
-
-    /*
-    const decimalHours = formatDecimalHours(daySum)
-    const hours = formatHours(daySum)
-    const roundHours = formatRoundHours(daySum)
-    // Add day separator
-    dayOutput.push(`[ ${bold(red(weekDay.toLocaleUpperCase()))} ${dayKey} (${green(decimalHours)} / ${blue(hours)} / ${red(roundHours)}) ]`)
-    dayOutput = dayOutput.concat(projectOutput.sort())
-    dayOutput.push('')
-
-    return dayOutput.join('\n')
-    */
     return {
       date,
-      actualDuration: projectEntries.reduce((totalDuration: number, entry: ProjectEntry) => totalDuration + entry.actualDuration, 0),
-      roundedDuration: projectEntries.reduce((totalDuration: number, entry: ProjectEntry) => totalDuration + entry.roundedDuration, 0),
-      projects: projectEntries,
-    } as SummaryEntry
-  }) as Summary
+      actualDuration: projectEntries.reduce(
+        (totalDuration: number, entry: ProjectEntry) =>
+          totalDuration + entry.actualDuration,
+        0
+      ),
+      roundedDuration: projectEntries.reduce(
+        (totalDuration: number, entry: ProjectEntry) =>
+          totalDuration + entry.roundedDuration,
+        0
+      ),
+      projects: projectEntries
+    } as SummaryEntry;
+  }) as Summary;
 
-  return summary
+  return summary;
 }
-
-
