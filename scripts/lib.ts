@@ -190,7 +190,7 @@ export async function processFile(inputPath): Promise<Summary> {
         // Iterate all time entries withing project
         const groupedByActivity = groupby(
           groupedByProject[projectKey].filter(filterEntry),
-          "taskActivityTitle"
+          "activityTitle"
         );
         // Iterate all tasks within day
         Object.keys(groupedByActivity).forEach(activityKey => {

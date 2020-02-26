@@ -5,7 +5,7 @@ export interface FormatOptions {
 export interface ExportEntry {
   id: string;
   project: string;
-  taskActivityTitle: string;
+  activityTitle: string;
   startDate: string;
   endDate: string;
   duration: number;
