@@ -15,20 +15,20 @@ export interface Export extends Array<ExportEntry> {}
 
 export interface ExportByDate {}
 
-export interface Task {
+export interface TimeEntry {
   date: Date;
   title: string;
   actualDuration: number;
   roundedDuration: number;
 }
 
-export interface Tasks extends Array<Task> {}
+export interface TimeEntries extends Array<TimeEntry> {}
 
 export interface ProjectEntry {
   title: string;
   actualDuration: number;
   roundedDuration: number;
-  tasks: Task[];
+  timeEntries: TimeEntry[];
 }
 
 export interface ProjectEntries extends Array<ProjectEntry> {}

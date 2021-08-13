@@ -15,7 +15,6 @@ import {
   green,
   bold,
   gray,
-  greenBright,
   white
 } from "colorette";
 import {
@@ -23,12 +22,12 @@ import {
   Export,
   ExportEntry,
   Duration,
-  Task,
+  TimeEntry,
   Summary,
   SummaryEntry,
   ProjectEntries,
   ProjectEntry,
-  Tasks,
+  TimeEntries,
   FormatOptions
 } from "./interfaces";
 
@@ -71,14 +70,14 @@ export function formatSummary(
 
       // Print each task on same line and simple format
       if (opts.oneLiner) {
-        const tasks = projectEntry.tasks.map(task => {
+        const timeEntries = projectEntry.timeEntries.map(task => {
           const roundedHours = formatDecimalHours(task.roundedDuration);
           return `${white(task.title)}: ${green(roundedHours)}`;
         });
         output.push(
           `  - ${yellow(projectEntry.title)}: ${red(
             roundedDecimalHours
-          )} = ${tasks.join(" | ")}`
+          )} = ${timeEntries.join(" | ")}`
         );
       }
       // Print each task on own line
@@ -87,8 +86,8 @@ export function formatSummary(
           `  - ${yellow(projectEntry.title)}: ${red(roundedDecimalHours)}`
         );
 
-        // Iterate all tasks within project/day
-        projectEntry.tasks.forEach(task => {
+        // Iterate all timeEntries within project/day
+        projectEntry.timeEntries.forEach(task => {
           const actualHours = formatHours(task.actualDuration);
           const roundedHours = formatDecimalHours(task.roundedDuration);
           output.push(
@@ -204,7 +203,7 @@ export async function processFile(inputPath): Promise<Summary> {
           });
         });
 
-        const tasks: Tasks = dayProjects.map(dayProjectEntry => {
+        const timeEntries: TimeEntries = dayProjects.map(dayProjectEntry => {
           const roundedDuration = roundDuration(dayProjectEntry.duration);
           //const decimalHours = formatDecimalHours(dayProjectEntry.duration)
           //const hours = formatHours(dayProjectEntry.duration)
@@ -216,18 +215,18 @@ export async function processFile(inputPath): Promise<Summary> {
             actualDuration: dayProjectEntry.duration,
             roundedDuration:
               roundedDuration.hours * 3600 + roundedDuration.minutes * 60
-          } as Task;
+          } as TimeEntry;
         });
 
         // Calculate sums for project and day, using rounded values
-        const actualDuration: Duration = tasks.reduce(
-          (totalDuration: number, task: Task) =>
-            totalDuration + task.actualDuration,
+        const actualDuration: Duration = timeEntries.reduce(
+          (totalDuration: number, timeEntry: TimeEntry) =>
+            totalDuration + timeEntry.actualDuration,
           0
         );
-        const roundedDuration: Duration = tasks.reduce(
-          (totalDuration: number, task: Task) =>
-            totalDuration + task.roundedDuration,
+        const roundedDuration: Duration = timeEntries.reduce(
+          (totalDuration: number, timeEntry: TimeEntry) =>
+            totalDuration + timeEntry.roundedDuration,
           0
         );
 
@@ -236,7 +235,7 @@ export async function processFile(inputPath): Promise<Summary> {
           title: projectKey,
           actualDuration,
           roundedDuration,
-          tasks: tasks
+          timeEntries
         } as ProjectEntry;
       }) as ProjectEntries;
 
