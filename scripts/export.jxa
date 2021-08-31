@@ -18,8 +18,8 @@ function exportReport(startDate, endDate, outputPath) {
   const reportSettings = helper.ReportSettings().make();
   const exportSettings = helper.ExportSettings().make();
 
+  reportSettings.timeEntriesIncluded = true;
   reportSettings.firstGroupingMode = 'raw';
-  reportSettings.tasksIncluded = true;
   reportSettings.appUsageIncluded = false;
 
   exportSettings.fileFormat = 'JSON';
