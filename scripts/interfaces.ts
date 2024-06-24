@@ -1,6 +1,9 @@
 export interface FormatOptions {
   oneLiner: boolean;
+  exportFormat: ExportFormat;
 }
+
+export type ExportFormat = "json" | "csv";
 
 export interface ExportEntry {
   id: string;

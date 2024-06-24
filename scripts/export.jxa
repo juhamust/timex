@@ -2,9 +2,11 @@
 
 function getHelper() {
   const helper = Application('TimingHelper');
-  if (!helper.scriptingSupportAvailable()) {
-    throw 'Export functionality required';
-  }
+
+  // FIXME: This crashes the script
+  //if (!helper.scriptingSupportAvailable()) {
+  //  throw 'Export functionality required';
+  //}
 
   return helper
 }

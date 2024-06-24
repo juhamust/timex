@@ -8,15 +8,7 @@
 import * as jsonfile from "jsonfile";
 import { parse, format } from "date-fns";
 import * as groupby from "lodash.groupby";
-import {
-  red,
-  blue,
-  yellow,
-  green,
-  bold,
-  gray,
-  white
-} from "colorette";
+import { red, blue, yellow, green, bold, gray, white } from "colorette";
 import {
   ParsedDuration,
   Export,
@@ -28,7 +20,7 @@ import {
   ProjectEntries,
   ProjectEntry,
   TimeEntries,
-  FormatOptions
+  FormatOptions,
 } from "./interfaces";
 
 export function parseDuration(rawValue): ParsedDuration {
@@ -38,7 +30,7 @@ export function parseDuration(rawValue): ParsedDuration {
 
   return {
     hours,
-    minutes
+    minutes,
   };
 }
 
@@ -48,11 +40,11 @@ export function parseDuration(rawValue): ParsedDuration {
  */
 export function formatSummary(
   summary: Summary,
-  opts: FormatOptions = { oneLiner: true }
+  opts: FormatOptions = { oneLiner: true, exportFormat: "json" }
 ): string {
   const output: string[] = [];
   //return JSON.stringify(summary)
-  summary.forEach(summaryEntry => {
+  summary.forEach((summaryEntry) => {
     const weekDay: string = format(summaryEntry.date, "ddd");
     const dayKey: string = format(summaryEntry.date, "YYYY-MM-DD");
     const decimalHours = formatDecimalHours(summaryEntry.roundedDuration);
@@ -63,14 +55,14 @@ export function formatSummary(
     );
 
     // Iterate all projects within day
-    summaryEntry.projects.forEach(projectEntry => {
+    summaryEntry.projects.forEach((projectEntry) => {
       const roundedDecimalHours = formatDecimalHours(
         projectEntry.roundedDuration
       );
 
       // Print each task on same line and simple format
       if (opts.oneLiner) {
-        const timeEntries = projectEntry.timeEntries.map(task => {
+        const timeEntries = projectEntry.timeEntries.map((task) => {
           const roundedHours = formatDecimalHours(task.roundedDuration);
           return `${white(task.title)}: ${green(roundedHours)}`;
         });
@@ -87,7 +79,7 @@ export function formatSummary(
         );
 
         // Iterate all timeEntries within project/day
-        projectEntry.timeEntries.forEach(task => {
+        projectEntry.timeEntries.forEach((task) => {
           const actualHours = formatHours(task.actualDuration);
           const roundedHours = formatDecimalHours(task.roundedDuration);
           output.push(
@@ -164,7 +156,7 @@ export function roundDuration(duration: number): ParsedDuration {
 
   return {
     hours: roundedHours,
-    minutes: roundedMinutes
+    minutes: roundedMinutes,
   };
 }
 
@@ -176,14 +168,14 @@ export async function processFile(inputPath): Promise<Summary> {
   const groupedByDate = groupby(data, grouper);
 
   // Iterate all days
-  const summary: Summary = Object.keys(groupedByDate).map(dayKey => {
+  const summary: Summary = Object.keys(groupedByDate).map((dayKey) => {
     const groupedByProject = groupby(groupedByDate[dayKey], "project");
     const date = parse(dayKey);
 
     // Iterate time entries per day/project
     const projectEntries = Object.keys(groupedByProject)
       .filter(filterProject)
-      .map(projectKey => {
+      .map((projectKey) => {
         let dayProjects = [];
 
         // Iterate all time entries withing project
@@ -192,18 +184,18 @@ export async function processFile(inputPath): Promise<Summary> {
           "activityTitle"
         );
         // Iterate all tasks within day
-        Object.keys(groupedByActivity).forEach(activityKey => {
+        Object.keys(groupedByActivity).forEach((activityKey) => {
           const durationSum = groupedByActivity[activityKey].reduce(
             (prevValue, timeEntry) => prevValue + timeEntry.duration || 0,
             0
           );
           dayProjects.push({
             activityKey,
-            duration: durationSum
+            duration: durationSum,
           });
         });
 
-        const timeEntries: TimeEntries = dayProjects.map(dayProjectEntry => {
+        const timeEntries: TimeEntries = dayProjects.map((dayProjectEntry) => {
           const roundedDuration = roundDuration(dayProjectEntry.duration);
           //const decimalHours = formatDecimalHours(dayProjectEntry.duration)
           //const hours = formatHours(dayProjectEntry.duration)
@@ -214,7 +206,7 @@ export async function processFile(inputPath): Promise<Summary> {
             title: dayProjectEntry.activityKey,
             actualDuration: dayProjectEntry.duration,
             roundedDuration:
-              roundedDuration.hours * 3600 + roundedDuration.minutes * 60
+              roundedDuration.hours * 3600 + roundedDuration.minutes * 60,
           } as TimeEntry;
         });
 
@@ -235,7 +227,7 @@ export async function processFile(inputPath): Promise<Summary> {
           title: projectKey,
           actualDuration,
           roundedDuration,
-          timeEntries
+          timeEntries,
         } as ProjectEntry;
       }) as ProjectEntries;
 
@@ -251,7 +243,7 @@ export async function processFile(inputPath): Promise<Summary> {
           totalDuration + entry.roundedDuration,
         0
       ),
-      projects: projectEntries
+      projects: projectEntries,
     } as SummaryEntry;
   }) as Summary;
 
