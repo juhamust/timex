@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run build",
     "build": "npm run export && npm run process",
-    "export": "CURDIR=`pwd` && mkdir -p $CURDIR/tmp && /usr/bin/env osascript -l JavaScript scripts/export2.jxa $CURDIR/tmp/output.json",
+    "export": "CURDIR=`pwd` && mkdir -p $CURDIR/tmp && /usr/bin/env osascript -l JavaScript scripts/export.jxa $CURDIR/tmp/output.json",
     "process": "ts-node scripts/process.ts ./tmp/output.json",
     "test": "jest"
   },
